@@ -2,8 +2,7 @@ const express = require("express");
 const connectDB = require("./src/config/database");
 const errorHandler = require("./src/middlewares/errorHandler");
 const swaggerMiddleware = require("./src/middlewares/swagger");
-const userRoutes = require("./src/routes/userRoutes");
-const authRoutes = require("./src/routes/authRoutes");
+const routes = require("./src/routes");
 
 require("dotenv").config();
 
@@ -21,11 +20,8 @@ app.get("/", (req, res) => {
 // Middleware for documentation
 swaggerMiddleware(app);
 
-// Middleware for logging errors
-app.use(errorHandler);
-
-app.use("/api", userRoutes);
-app.use("/api", authRoutes);
+// Routes
+app.use("/api", routes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

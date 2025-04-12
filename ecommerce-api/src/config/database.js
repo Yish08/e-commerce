@@ -8,10 +8,7 @@ const connectDB = async () => {
   const dbName = process.env.MONGODB_DB || "ecommerce-db";
 
   try {
-    await mongoose.connect(`${dbURI}/${dbName}`, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(`${dbURI}/${dbName}`, {});
     console.log("MongoDB connected");
   } catch (error) {
     console.error("MongoDB connection error:", error);
