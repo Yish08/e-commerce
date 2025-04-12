@@ -1,7 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const errorHandler = require("../middlewares/errorHandler");
 
 const generateToken = (userId, userName, role) => {
   return jwt.sign({ userId, userName, role }, process.env.JWT_SECRET, {
@@ -18,7 +17,7 @@ const hashPassword = async (password) => {
   return await bcrypt.hash(password, saltRounds);
 };
 
-exports.register = async (req, res, next) => {
+exports.register = async (req, res) => {
   const { userName, email, password } = req.body;
   const displayName = userName;
   const role = "customer";
@@ -43,11 +42,11 @@ exports.register = async (req, res, next) => {
 
     res.status(201).send({ newUser });
   } catch (error) {
-    errorHandler(error, req, res, next);
+    next(error);
   }
 };
 
-exports.login = async (req, res, next) => {
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -64,78 +63,6 @@ exports.login = async (req, res, next) => {
 
     res.status(200).json({ token });
   } catch (error) {
-    errorHandler(error, req, res, next);
+    next(error);
   }
 };
-
-/**
- * @swagger
- * /register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - userName
- *               - email
- *               - password
- *             properties:
- *               userName:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       400:
- *         description: User already exists
- *       500:
- *         description: Some server error
- */
-
-/**
- * @swagger
- * /login:
- *   post:
- *     summary: Login a user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: User logged in successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *       400:
- *         description: Invalid credentials
- *       500:
- *         description: Some server error
- * */

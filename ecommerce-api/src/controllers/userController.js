@@ -1,5 +1,4 @@
 const User = require("../models/user");
-const errorHandler = require("../middlewares/errorHandler");
 
 const hashPassword = async (password) => {
   const saltRounds = 10;
@@ -14,7 +13,7 @@ exports.getUsers = async (req, res, next) => {
     }
     res.status(200).json(users);
   } catch (error) {
-    errorHandler(error, req, res, next);
+    next(error);
   }
 };
 
@@ -26,45 +25,33 @@ exports.getUserById = async (req, res, next) => {
     }
     res.status(200).json(user);
   } catch (error) {
-    errorHandler(error, req, res, next);
+    next(error);
   }
 };
 
 exports.createUser = async (req, res, next) => {
-  const { userName, email, password, displayName, role } = req.body;
+  const { userName, email, passwordHash, displayName, role } = req.body;
 
-  const passwordHash = await hashPassword(password);
+  const finalPassword = await hashPassword(passwordHash);
 
   try {
     const newUser = new User({
       userName,
       email,
-      passwordHash,
+      passwordHash: finalPassword,
       displayName,
       role,
     });
     await newUser.save();
     res.status(201).json(newUser);
   } catch (error) {
-    errorHandler(error, req, res, next);
+    next(error);
   }
 };
 
 exports.updateUser = async (req, res, next) => {
   try {
-    const { userName, email, password, displayName, role } = req.body;
-
-    const passwordHash = await hashPassword(password);
-
-    const updatedUser = {
-      userName,
-      email,
-      passwordHash,
-      displayName,
-      role,
-    };
-
-    const user = await User.findByIdAndUpdate(req.params.id, updatedUser, {
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
     if (!user) {
@@ -72,7 +59,7 @@ exports.updateUser = async (req, res, next) => {
     }
     res.status(200).json(user);
   } catch (error) {
-    errorHandler(error, req, res, next);
+    next(error);
   }
 };
 
@@ -84,117 +71,6 @@ exports.deleteUser = async (req, res, next) => {
     }
     res.status(204).json({ message: "User deleted successfully" });
   } catch (error) {
-    errorHandler(error, req, res, next);
+    next(error);
   }
 };
-
-/**
- * @swagger
- * /users:
- *   get:
- *     summary: Retrieve a list of users
- *     tags: [Users]
- *     responses:
- *       200:
- *         description: List of users retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
- *       404:
- *         description: No users found
- *       500:
- *         description: Some server error
- *   post:
- *     summary: Create a new user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/User'
- *     responses:
- *       201:
- *         description: User created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Some server error
- */
-
-/**
- * @swagger
- * /users/{id}:
- *   get:
- *     summary: Retrieve a user by ID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The user ID
- *     responses:
- *       200:
- *         description: User retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       404:
- *         description: User not found
- *       500:
- *         description: Some server error
- *   put:
- *     summary: Update a user by ID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The user ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/User'
- *     responses:
- *       200:
- *         description: User updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       404:
- *         description: User not found
- *       500:
- *         description: Some server error
- *   delete:
- *     summary: Delete a user by ID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The user ID
- *     responses:
- *       204:
- *         description: User deleted successfully
- *       404:
- *         description: User not found
- *       500:
- *         description: Some server error
- */
